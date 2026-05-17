@@ -1,0 +1,4 @@
+#!/bin/bash
+export PORT=9000
+cd "$(dirname "$0")" || exit 1
+exec /var/lang/node18/bin/node scf/server.mjs
