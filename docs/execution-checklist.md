@@ -144,4 +144,4 @@
 
 ---
 
-*最后更新：M1–M3 已完成；**UI V1**（浅色 ChatGPT 风）见 [UI-V1-PRD.md](./UI-V1-PRD.md)*
+*最后更新：UI V1 已完成；**V2**（意图/状态机/恢复/指标）见 [V2-PRD.md](./V2-PRD.md) · [V2-checklist.md](./V2-checklist.md)*
