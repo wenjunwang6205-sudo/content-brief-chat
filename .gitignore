@@ -8,6 +8,8 @@ node_modules/
 
 # Build
 dist/
+demo/dist/
+demo/tsconfig.tsbuildinfo
 .vercel/
 
 # OS / IDE

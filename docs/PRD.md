@@ -3,7 +3,7 @@
 | 字段 | 内容 |
 |------|------|
 | 产品名称 | **ContentBrief Chat** |
-| 版本 | v0.1（文档阶段） |
+| 版本 | v0.2（分阶段交付） |
 | 场景行业 | 快消 · **饮料** |
 | 文档状态 | Draft |
 | 关联文档 | [execution-checklist.md](./execution-checklist.md)、[testing.md](./testing.md) |
@@ -292,7 +292,71 @@ system + rules
 
 ---
 
-## 10. 里程碑与风险
+## 10. 分阶段交付范围
+
+> 产品需求以本文档为准；**执行顺序与勾选**见 [execution-checklist.md](./execution-checklist.md)。各阶段仅交付列出的 P0 能力，不提前扩张范围。
+
+### M0 — 需求与文档（已完成）
+
+| 交付项 | PRD 对应 | 验收 |
+|--------|----------|------|
+| PRD、测试说明、执行清单 | 全文 | 文档齐套、无真实企业名 |
+| 产品大图与 V0 切口 | §3、§4 | Brief + 问答双模式定义清晰 |
+| 评测维度与 badcase 定义 | testing.md §4–5 | 8 维 rubric + BC-01/02 |
+
+### M1 — 知识库与评测资产
+
+| 交付项 | PRD 对应 | 验收 |
+|--------|----------|------|
+| `knowledge/` 五类语料 | §4.2 | brand/product/channel/compliance/cases 齐全 |
+| `eval/badcases/`、`golden-samples/` | testing.md §5 | 2 badcase + ≥1 金样例 |
+| doc_id 命名规范 | knowledge/README | 可被 RAG 检索并引用 |
+
+**阶段不交付：** 前端、API、真实 LLM 调用。
+
+### M2 — Vercel API
+
+| 交付项 | PRD 对应 | 验收 |
+|--------|----------|------|
+| `POST /api/chat` | §4、§6 | 契约与 PRD 一致 |
+| RAG 检索 V0 | §4.2、§7.2 | 回答带 citations |
+| 限流 | §6.2 | 超阈值返回 429 |
+| Brief 追问 / 生成 | §4.4–4.5 | 缺槽位追问；充足则出 Brief |
+| 合规 guardrail | §4.1 P1 | BC-02 类表述拦截或提示 |
+| `.env.example` | §6 | 无真实 Key 入库 |
+
+**阶段不交付：** GitHub Pages 前端（可 Postman/curl 测 API）。
+
+### M3 — 前端 Demo 与公网
+
+| 交付项 | PRD 对应 | 验收 |
+|--------|----------|------|
+| 对话 UI + 模式切换 | §5 | 问答 / Brief 可切换 |
+| 引用、确认导出 | §5 | PRD §9.1 P0 走通 |
+| GitHub Pages | §6.1 | 静态页可访问 |
+| `VITE_API_BASE` | §6 | 指向已部署 Vercel |
+
+**阶段不交付：** SSO、埋点大盘、多租户。
+
+### M4 — 打磨与对外
+
+| 交付项 | 验收 |
+|--------|------|
+| Prompt 迭代记录 | docs/prompt-iteration.md |
+| 作品集链接 | portfolio 项目卡 |
+| 2 分钟录屏 | 问答 + Brief + 导出 |
+
+### 阶段依赖关系
+
+```
+M0 → M1 → M2 → M3 → M4
+         ↑    ↑
+    知识库必须先于 API；API 必须先于 Pages 真调用
+```
+
+---
+
+## 11. 里程碑与风险
 
 | 里程碑 | 交付物 |
 |--------|--------|
@@ -310,7 +374,7 @@ system + rules
 
 ---
 
-## 11. 附录：虚构品牌说明
+## 12. 附录：虚构品牌说明
 
 演示品牌暂定 **「澄澈饮力」**（虚构饮料品牌），产品示例：电解质饮料、无糖茶、气泡水。所有 SKU、价格、活动均为演示数据，不代表任何真实品牌。
 

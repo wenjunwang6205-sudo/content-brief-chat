@@ -1,0 +1,35 @@
+{
+  "brand": "澄澈饮力",
+  "skus": [
+    {
+      "id": "product/sku-electrolyte",
+      "name": "澄澈饮力 · 电解质饮料（青柠）",
+      "sellingPoints": [
+        "电解质科学配比，适合运动后补给",
+        "青柠风味，低甜口感",
+        "0 脂肪，每瓶 500ml"
+      ],
+      "note": "演示数据，不含零售价；促销政策以官方发布为准"
+    },
+    {
+      "id": "product/sku-sugar-free-tea",
+      "name": "澄澈饮力 · 无糖茶（乌龙）",
+      "sellingPoints": [
+        "真茶萃取，0 糖 0 卡",
+        "乌龙焙香，办公室场景友好",
+        "330ml 便携装"
+      ],
+      "note": "演示数据，不含零售价"
+    },
+    {
+      "id": "product/sku-sparkling",
+      "name": "澄澈饮力 · 气泡水（白桃）",
+      "sellingPoints": [
+        "强劲气泡感，白桃清香",
+        "0 糖，佐餐与聚会场景",
+        "480ml 罐装"
+      ],
+      "note": "演示数据，不含零售价"
+    }
+  ]
+}
