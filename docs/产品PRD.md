@@ -7,8 +7,8 @@
 | 场景行业 | 快消 · **饮料** |
 | 文档类型 | **切口详细 PRD**（非系统全量 PRD） |
 | 文档状态 | Draft |
-| 上游文档 | [00-文档导航](./00-文档导航.md)、[01-需求分析](./01-需求分析-内容团队提效系统.md)、[02-产品大图](./02-产品大图-内容团队提效系统.md)、[03-从需求到PRD](./03-从需求到PRD-设计过程.md) |
-| 关联文档 | [execution-checklist.md](./execution-checklist.md)、[testing.md](./testing.md) |
+| 上游文档 | [文档导航](./文档导航.md)、[需求分析](./需求分析.md)、[产品大图](./产品大图.md)、[设计过程](./设计过程.md) |
+| 关联文档 | [测试说明](./测试说明.md)、[演示指南](./演示指南.md) |
 
 ---
 
@@ -37,7 +37,7 @@
 |------|------|----------------|
 | 任务完成 | 用户可在一次会话内获得可交付 Brief 草案 | 主流程可走通 |
 | 效率 | 相对纯人工撰写首稿 | 耗时显著缩短（演示定性） |
-| 质量 | 品牌一致、合规、可引用 | 评测维度均分 ≥ 4/5（见 testing.md） |
+| 质量 | 品牌一致、合规、可引用 | 评测维度均分 ≥ 4/5（见 测试说明.md） |
 | 可控 | 无依据不编造、关键结论可溯源 | 100% 带引用或明确追问 |
 
 ### 1.4 非目标（V0 不做）
@@ -283,7 +283,7 @@ system + rules
 
 ### 9.2 质量验收
 
-- [ ] 通过 [testing.md](./testing.md) 中 P0 用例  
+- [ ] 通过 [测试说明](./测试说明.md) 中 P0 用例  
 - [ ] 2 个 documented badcase 均有对应修复策略  
 - [ ] 评测 rubric 抽样 Brief ≥ 4/5 均分  
 
@@ -296,7 +296,7 @@ system + rules
 
 ## 10. 分阶段交付范围
 
-> 产品需求以本文档为准；**执行顺序与勾选**见 [execution-checklist.md](./execution-checklist.md)。各阶段仅交付列出的 P0 能力，不提前扩张范围。
+> 产品需求以本文档为准。各阶段仅交付列出的 P0 能力，不提前扩张范围。
 
 ### M0 — 需求与文档（已完成）
 
@@ -304,14 +304,14 @@ system + rules
 |--------|----------|------|
 | PRD、测试说明、执行清单 | 全文 | 文档齐套、无真实企业名 |
 | 产品大图与 V0 切口 | §3、§4 | Brief + 问答双模式定义清晰 |
-| 评测维度与 badcase 定义 | testing.md §4–5 | 8 维 rubric + BC-01/02 |
+| 评测维度与 badcase 定义 | 测试说明.md §4–5 | 8 维 rubric + BC-01/02 |
 
 ### M1 — 知识库与评测资产
 
 | 交付项 | PRD 对应 | 验收 |
 |--------|----------|------|
 | `knowledge/` 五类语料 | §4.2 | brand/product/channel/compliance/cases 齐全 |
-| `eval/badcases/`、`golden-samples/` | testing.md §5 | 2 badcase + ≥1 金样例 |
+| `eval/badcases/`、`golden-samples/` | 测试说明.md §5 | 2 badcase + ≥1 金样例 |
 | doc_id 命名规范 | knowledge/README | 可被 RAG 检索并引用 |
 
 **阶段不交付：** 前端、API、真实 LLM 调用。
@@ -344,7 +344,7 @@ system + rules
 
 | 交付项 | 验收 |
 |--------|------|
-| Prompt 迭代记录 | docs/prompt-iteration.md |
+| Prompt 迭代记录 | 开发过程内部记录 |
 | 作品集链接 | portfolio 项目卡 |
 | 2 分钟录屏 | 问答 + Brief + 导出 |
 
@@ -382,4 +382,4 @@ M0 → M1 → M2 → M3 → M4
 
 ---
 
-*文档结束 — 变更请同步更新 execution-checklist.md 与 testing.md*
+*文档结束 — 变更请同步更新 测试说明.md*

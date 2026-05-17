@@ -12,6 +12,9 @@ demo/dist/
 demo/tsconfig.tsbuildinfo
 .vercel/
 
+# Local-only: interview notes, dev checklists, iteration logs
+private/
+
 # OS / IDE
 .DS_Store
 *.log
