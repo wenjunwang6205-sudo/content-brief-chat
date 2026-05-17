@@ -1,4 +1,5 @@
 import type { Citation } from "../types";
+import { MarkdownContent } from "./MarkdownContent";
 
 type CitationDrawerProps = {
   citation: Citation | null;
@@ -7,6 +8,8 @@ type CitationDrawerProps = {
 
 export function CitationDrawer({ citation, onClose }: CitationDrawerProps) {
   if (!citation) return null;
+
+  const body = citation.fullContent ?? citation.snippet;
 
   return (
     <>
@@ -18,7 +21,10 @@ export function CitationDrawer({ citation, onClose }: CitationDrawerProps) {
       />
       <aside className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--bg-surface)] shadow-xl">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">引用来源</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+            引用来源
+            {citation.index ? ` [${citation.index}]` : ""}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -32,9 +38,13 @@ export function CitationDrawer({ citation, onClose }: CitationDrawerProps) {
           <h4 className="mt-2 text-base font-medium text-[var(--text-primary)]">
             {citation.title}
           </h4>
-          <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-            {citation.snippet}
-          </p>
+          <div className="mt-4 max-w-none text-sm leading-relaxed text-[var(--text-secondary)]">
+            {body.length > 400 ? (
+              <MarkdownContent content={body} className="text-sm" />
+            ) : (
+              <p>{body}</p>
+            )}
+          </div>
         </div>
       </aside>
     </>

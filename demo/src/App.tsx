@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { completeTask, sendChat } from "./api";
+import { completeTask, sendChat, sendChatStream } from "./api";
 import { AnalyticsPanel } from "./components/AnalyticsPanel";
 import { ChatThread } from "./components/ChatThread";
 import { CitationDrawer } from "./components/CitationDrawer";
 import { Composer } from "./components/Composer";
+import { DemoBanner } from "./components/DemoBanner";
 import { Header } from "./components/Header";
 import { ResumeBanner } from "./components/ResumeBanner";
 import { TaskStatusBar } from "./components/TaskStatusBar";
@@ -14,7 +15,15 @@ import {
   loadSession,
   saveSession,
 } from "./lib/session";
-import type { ChatMode, Citation, Intent, Message, TaskState } from "./types";
+import type {
+  BriefRevision,
+  ChatMode,
+  ChatResponse,
+  Citation,
+  Intent,
+  Message,
+  TaskState,
+} from "./types";
 
 function uid() {
   return Math.random().toString(36).slice(2);
@@ -27,6 +36,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingBrief, setPendingBrief] = useState<string | null>(null);
+  const [briefRevision, setBriefRevision] = useState<BriefRevision | null>(null);
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null);
   const [taskState, setTaskState] = useState<TaskState>("idle");
   const [lastIntent, setLastIntent] = useState<Intent | null>(null);
@@ -37,10 +47,12 @@ export default function App() {
   const taskStartedRef = useRef(false);
   const hydratedRef = useRef(false);
 
-  const history = messages.map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  const history = messages
+    .filter((m) => !m.streaming)
+    .map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
   useEffect(() => {
     const saved = loadSession();
@@ -48,6 +60,7 @@ export default function App() {
       setMode(saved.mode);
       setMessages(saved.messages);
       setPendingBrief(saved.pendingBrief);
+      setBriefRevision(saved.briefRevision ?? null);
       setTaskState(saved.taskState);
       setSessionId(saved.sessionId);
       setTaskId(saved.taskId);
@@ -66,12 +79,13 @@ export default function App() {
       sessionId,
       taskId,
       mode,
-      messages,
+      messages: messages.filter((m) => !m.streaming),
       pendingBrief,
+      briefRevision,
       taskState,
       savedAt: new Date().toISOString(),
     });
-  }, [sessionId, taskId, mode, messages, pendingBrief, taskState]);
+  }, [sessionId, taskId, mode, messages, pendingBrief, briefRevision, taskState]);
 
   const resetSession = useCallback(() => {
     const ids = createSessionIds();
@@ -81,6 +95,7 @@ export default function App() {
     setInput("");
     setError(null);
     setPendingBrief(null);
+    setBriefRevision(null);
     setActiveCitation(null);
     setTaskState("idle");
     setLastIntent(null);
@@ -111,6 +126,37 @@ export default function App() {
     track("task_started", { taskId, sessionId, intent });
   };
 
+  const applyResponse = useCallback(
+    (res: ChatResponse) => {
+    if (res.intent) setLastIntent(res.intent);
+    if (res.taskState) setTaskState(res.taskState);
+    maybeStartTask(res.intent);
+
+    const assistantContent = res.needClarification
+      ? `${res.reply}\n\n${res.clarificationQuestions.map((q) => `• ${q}`).join("\n")}`
+      : res.reply;
+
+    const assistantMsg: Message = {
+      id: uid(),
+      role: "assistant",
+      content: assistantContent,
+      citations: res.citations,
+      briefMarkdown: res.brief?.markdown,
+      briefRevision: res.briefRevision ?? null,
+    };
+
+    setMessages((prev) => [...prev, assistantMsg]);
+    if (res.brief?.markdown) {
+      setPendingBrief(res.brief.markdown);
+      setBriefRevision(res.briefRevision ?? null);
+    }
+    if (res.taskCompleted) {
+      track("task_completed", { taskId, sessionId });
+    }
+  },
+    [sessionId, taskId],
+  );
+
   const runSend = useCallback(
     async (text: string, sendMode: ChatMode = mode) => {
       const trimmed = text.trim();
@@ -119,6 +165,7 @@ export default function App() {
       setError(null);
       setLoading(true);
       const userMsg: Message = { id: uid(), role: "user", content: trimmed };
+      const nextHistory = [...history, { role: "user" as const, content: trimmed }];
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
 
@@ -126,39 +173,76 @@ export default function App() {
         setTaskState("clarifying");
       }
 
+      const params = {
+        mode: sendMode,
+        message: trimmed,
+        history: nextHistory,
+        sessionId,
+        taskId,
+        taskState,
+        previousBrief: pendingBrief,
+      };
+
+      const useStream = sendMode === "qa";
+
       try {
-        const res = await sendChat({
-          mode: sendMode,
-          message: trimmed,
-          history: [...history, { role: "user", content: trimmed }],
-          sessionId,
-          taskId,
-          taskState,
-          previousBrief: pendingBrief,
-        });
+        if (useStream) {
+          const streamId = uid();
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: streamId,
+              role: "assistant",
+              content: "",
+              streaming: true,
+              citations: [],
+            },
+          ]);
 
-        if (res.intent) setLastIntent(res.intent);
-        if (res.taskState) setTaskState(res.taskState);
-        maybeStartTask(res.intent);
-
-        const assistantContent = res.needClarification
-          ? `${res.reply}\n\n${res.clarificationQuestions.map((q) => `• ${q}`).join("\n")}`
-          : res.reply;
-
-        const assistantMsg: Message = {
-          id: uid(),
-          role: "assistant",
-          content: assistantContent,
-          citations: res.citations,
-          briefMarkdown: res.brief?.markdown,
-        };
-
-        setMessages((prev) => [...prev, assistantMsg]);
-        if (res.brief?.markdown) {
-          setPendingBrief(res.brief.markdown);
-        }
-        if (res.taskCompleted) {
-          track("task_completed", { taskId, sessionId });
+          await sendChatStream(params, {
+            onMeta: (meta) => {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamId
+                    ? { ...m, citations: meta.citations }
+                    : m,
+                ),
+              );
+            },
+            onDelta: (chunk) => {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamId ? { ...m, content: m.content + chunk } : m,
+                ),
+              );
+            },
+            onDone: (res) => {
+              const assistantContent = res.needClarification
+                ? `${res.reply}\n\n${res.clarificationQuestions.map((q) => `• ${q}`).join("\n")}`
+                : res.reply;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === streamId
+                    ? {
+                        ...m,
+                        content: assistantContent,
+                        citations: res.citations,
+                        streaming: false,
+                      }
+                    : m,
+                ),
+              );
+              if (res.intent) setLastIntent(res.intent);
+              if (res.taskState) setTaskState(res.taskState);
+            },
+            onError: async (err) => {
+              setMessages((prev) => prev.filter((m) => m.id !== streamId));
+              setError(err.message);
+            },
+          });
+        } else {
+          const res = await sendChat(params);
+          applyResponse(res);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "发送失败");
@@ -166,7 +250,16 @@ export default function App() {
         setLoading(false);
       }
     },
-    [history, loading, mode, pendingBrief, sessionId, taskId, taskState],
+    [
+      applyResponse,
+      history,
+      loading,
+      mode,
+      pendingBrief,
+      sessionId,
+      taskId,
+      taskState,
+    ],
   );
 
   const exportBrief = () => {
@@ -191,12 +284,10 @@ export default function App() {
       setTaskState("completed");
       if (res.intent) setLastIntent(res.intent);
       track("task_completed", { taskId, sessionId });
-      const assistantMsg: Message = {
-        id: uid(),
-        role: "assistant",
-        content: res.reply,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: uid(), role: "assistant", content: res.reply },
+      ]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "标记失败");
     } finally {
@@ -207,6 +298,7 @@ export default function App() {
   return (
     <div className="flex h-[100dvh] flex-col bg-[var(--bg-page)]">
       <Header mode={mode} onModeChange={handleModeChange} onNewChat={handleNewChat} />
+      <DemoBanner />
 
       {showResumeBanner ? (
         <ResumeBanner onDismiss={() => setShowResumeBanner(false)} />
@@ -219,6 +311,7 @@ export default function App() {
         loading={loading}
         mode={mode}
         pendingBrief={pendingBrief}
+        briefRevision={briefRevision}
         taskState={taskState}
         onPickSuggestion={(msg, m) => {
           setMode(m);

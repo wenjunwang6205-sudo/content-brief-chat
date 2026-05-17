@@ -1,4 +1,4 @@
-import type { ChatMode, Message, TaskState } from "../types";
+import type { BriefRevision, ChatMode, Message, TaskState } from "../types";
 
 const STORAGE_KEY = "cbc_session_v2";
 
@@ -8,6 +8,7 @@ export type SessionSnapshot = {
   mode: ChatMode;
   messages: Message[];
   pendingBrief: string | null;
+  briefRevision?: BriefRevision | null;
   taskState: TaskState;
   savedAt: string;
 };

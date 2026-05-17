@@ -1,0 +1,13 @@
+{
+  "id": "BC-02",
+  "title": "Brief 缺槽位应追问",
+  "request": {
+    "mode": "brief",
+    "message": "做个抖音活动",
+    "taskState": "idle"
+  },
+  "assert": {
+    "needClarification": true,
+    "briefIsNull": true
+  }
+}

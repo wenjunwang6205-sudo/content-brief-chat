@@ -2,6 +2,9 @@
   "name": "content-brief-chat",
   "private": true,
   "type": "module",
-  "version": "0.2.0",
-  "description": "ContentBrief Chat — FMCG beverage enterprise conversational assistant demo"
+  "version": "0.3.0",
+  "description": "ContentBrief Chat — FMCG beverage enterprise conversational assistant demo",
+  "scripts": {
+    "eval": "node scripts/eval.mjs"
+  }
 }

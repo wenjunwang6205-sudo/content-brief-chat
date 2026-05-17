@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { ChatMode, Citation, Message, TaskState } from "../types";
+import type { BriefRevision, ChatMode, Citation, Message, TaskState } from "../types";
 import { BriefArtifact } from "./BriefArtifact";
 import { EmptyState } from "./EmptyState";
 import { MessageItem } from "./MessageItem";
@@ -9,6 +9,7 @@ type ChatThreadProps = {
   loading: boolean;
   mode: ChatMode;
   pendingBrief: string | null;
+  briefRevision?: BriefRevision | null;
   taskState: TaskState;
   onPickSuggestion: (message: string, mode: ChatMode) => void;
   onCitationClick: (citation: Citation) => void;
@@ -21,6 +22,7 @@ export function ChatThread({
   loading,
   mode,
   pendingBrief,
+  briefRevision,
   taskState,
   onPickSuggestion,
   onCitationClick,
@@ -47,7 +49,7 @@ export function ChatThread({
                 onCitationClick={onCitationClick}
               />
             ))}
-            {loading ? (
+            {loading && !messages.some((m) => m.streaming) ? (
               <div className="flex gap-1 py-4" aria-label="正在生成">
                 <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-secondary)] [animation-delay:-0.2s]" />
                 <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-secondary)] [animation-delay:-0.1s]" />
@@ -58,6 +60,7 @@ export function ChatThread({
               <BriefArtifact
                 markdown={pendingBrief}
                 taskState={taskState}
+                briefRevision={briefRevision}
                 onExport={onExportBrief}
                 onComplete={onCompleteTask}
               />

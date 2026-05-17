@@ -1,9 +1,11 @@
-import type { TaskState } from "../types";
+import type { BriefRevision, TaskState } from "../types";
+import { BriefRevisionPanel } from "./BriefRevisionPanel";
 import { MarkdownContent } from "./MarkdownContent";
 
 type BriefArtifactProps = {
   markdown: string;
   taskState: TaskState;
+  briefRevision?: BriefRevision | null;
   onExport: () => void;
   onComplete: () => void;
 };
@@ -11,6 +13,7 @@ type BriefArtifactProps = {
 export function BriefArtifact({
   markdown,
   taskState,
+  briefRevision,
   onExport,
   onComplete,
 }: BriefArtifactProps) {
@@ -44,6 +47,7 @@ export function BriefArtifact({
           </button>
         </div>
       </div>
+      {briefRevision ? <BriefRevisionPanel revision={briefRevision} /> : null}
       <div className="max-h-72 overflow-y-auto px-4 py-3">
         <MarkdownContent content={markdown} />
       </div>

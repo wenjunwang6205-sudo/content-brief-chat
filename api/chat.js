@@ -1,5 +1,14 @@
-import { analyzeBriefSlots } from "../lib/brief-slots.js";
+import { analyzeBriefSlotsFromText } from "../lib/brief-slots.js";
+import {
+  computeBriefDiff,
+  stripRevisionSummary,
+} from "../lib/brief-diff.js";
+import { formatCitationsForClient } from "../lib/citations-format.js";
 import { scanCompliance, looksLikePriceQuestion } from "../lib/guardrail.js";
+import {
+  mergeHistoryForSlots,
+  normalizeHistory,
+} from "../lib/history.js";
 import { chatCompletion } from "../lib/llm.js";
 import { detectIntent } from "../lib/intent.js";
 import {
@@ -46,10 +55,15 @@ function basePayload(extra = {}) {
     needIntentConfirm: false,
     intentOptions: [],
     brief: null,
+    briefRevision: null,
     taskCompleted: false,
     guardrail: { triggered: false, hits: [] },
     ...extra,
   };
+}
+
+function mapCitations(raw) {
+  return formatCitationsForClient(raw);
 }
 
 export default async function handler(req, res) {
@@ -77,6 +91,7 @@ export default async function handler(req, res) {
     const previousBrief = (body?.previousBrief ?? "").trim();
     const taskStateIn = body?.taskState ?? "idle";
     const hasPreviousBrief = previousBrief.length > 100;
+    const conversation = normalizeHistory(body?.history, message);
 
     if (action === "complete_task") {
       return res.status(200).json(
@@ -94,7 +109,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "message is required" });
     }
 
-    const { intent, confidence } = detectIntent({
+    const { intent } = detectIntent({
       message,
       mode,
       hasPreviousBrief,
@@ -130,8 +145,8 @@ export default async function handler(req, res) {
             "知识库中未记载具体零售价或促销折扣，且不宜使用绝对化用语。请在 Brief「待确认项」标注「价格与促销以官方发布为准」，或调整表述。",
           intent: "policy_block",
           taskState: taskStateIn,
-          citations: searchKnowledge("compliance 价格 促销", 2).map(
-            ({ docId, title, snippet }) => ({ docId, title, snippet }),
+          citations: mapCitations(
+            searchKnowledge("compliance 价格 促销", 2),
           ),
           guardrail: { triggered: true, hits: ["价格/折扣或绝对化用语"] },
         }),
@@ -158,24 +173,25 @@ export default async function handler(req, res) {
         markdown = `${rawReply}\n\n---\n**合规提示：** ${guard.suggestion}`;
       }
 
+      const briefRevision = computeBriefDiff(previousBrief, markdown);
+      const displayMarkdown = stripRevisionSummary(markdown);
+
       return res.status(200).json(
         basePayload({
-          reply: `已根据你的指令更新 Brief（${guard.triggered ? "含合规提示" : "请查看下方草案"}）。`,
+          reply: `已根据你的指令更新 Brief。${briefRevision.summary}`,
           intent,
           taskState: "await_confirm",
-          citations: citations.map(({ docId, title, snippet }) => ({
-            docId,
-            title,
-            snippet,
-          })),
-          brief: { markdown },
+          citations: mapCitations(citations),
+          brief: { markdown: displayMarkdown },
+          briefRevision,
           guardrail: guard,
         }),
       );
     }
 
     if (intent === "brief_create") {
-      const slots = analyzeBriefSlots(message);
+      const aggregated = mergeHistoryForSlots(conversation, message);
+      const slots = analyzeBriefSlotsFromText(aggregated);
       if (!slots.complete) {
         return res.status(200).json(
           basePayload({
@@ -189,14 +205,19 @@ export default async function handler(req, res) {
         );
       }
 
-      const citations = searchKnowledge(message, 5);
+      const searchQuery = aggregated.slice(-800);
+      const citations = searchKnowledge(searchQuery, 5);
       const contextBlock =
         citations.length > 0
           ? formatContextForPrompt(citations)
           : "（未检索到相关片段，请谨慎回答并提示知识库可能不完整）";
 
       const rawReply = await chatCompletion(
-        buildBriefMessages({ request: message, contextBlock }),
+        buildBriefMessages({
+          request: aggregated,
+          contextBlock,
+          history: conversation,
+        }),
       );
       const guard = scanCompliance(rawReply);
       let markdown = rawReply;
@@ -211,11 +232,7 @@ export default async function handler(req, res) {
             : "已生成 Brief 草案，请确认后导出或继续提出修改。",
           intent,
           taskState: "await_confirm",
-          citations: citations.map(({ docId, title, snippet }) => ({
-            docId,
-            title,
-            snippet,
-          })),
+          citations: mapCitations(citations),
           brief: { markdown },
           guardrail: guard,
         }),
@@ -229,7 +246,11 @@ export default async function handler(req, res) {
         : "（未检索到相关片段，请谨慎回答并提示知识库可能不完整）";
 
     const rawReply = await chatCompletion(
-      buildQaMessages({ query: message, contextBlock }),
+      buildQaMessages({
+        query: message,
+        contextBlock,
+        history: conversation,
+      }),
     );
     const guard = scanCompliance(rawReply);
     let reply = rawReply;
@@ -242,11 +263,7 @@ export default async function handler(req, res) {
         reply,
         intent: "knowledge_qa",
         taskState: "idle",
-        citations: citations.map(({ docId, title, snippet }) => ({
-          docId,
-          title,
-          snippet,
-        })),
+        citations: mapCitations(citations),
         guardrail: guard,
       }),
     );

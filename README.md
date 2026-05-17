@@ -1,8 +1,25 @@
 # ContentBrief Chat
 
-面向快消**饮料**行业内容团队的企业级对话助手演示：**知识问答** + **活动 Content Brief 任务闭环**（引用溯源、追问补全、人工确认导出）。**V2** 已支持意图路由、任务状态机、跨轮 Brief 修订、会话恢复与本地指标面板（`?debug=1`）。
+面向快消**饮料**行业内容团队的企业级对话助手演示：**知识问答** + **活动 Content Brief 任务闭环**（引用溯源、追问补全、人工确认导出）。
+
+**V2.4** 起：多轮对话、QA 流式输出、脚注引用、Brief 修订 diff、自动 eval 回归。
 
 虚构品牌：**澄澈饮力**。文档与代码中不包含任何真实企业名称。
+
+## 3 分钟演示路径
+
+1. 打开 [在线 Demo](https://wenjunwang6205-sudo.github.io/content-brief-chat/) → 点击「品牌调性是什么？」→ 观察流式输出与正文 `[1](cite:1)` 引用  
+2. 点击引用或底部来源 → Drawer 查看知识库原文  
+3. 切换到 **Brief 任务** → 先发「做个抖音活动」→ 再补全 618 / 产品 / 目标 / 人群 → 生成 Brief  
+4. 输入「把人群改成 Z 世代」→ 查看修订摘要与章节标签  
+5. **确认并导出** → **标记任务完成** → 刷新页面验证会话恢复（可选 `?debug=1` 看指标）
+
+## 自动回归
+
+```bash
+# 默认请求生产 API；本地 API：EVAL_API_BASE=http://localhost:3000 npm run eval
+npm run eval
+```
 
 ## 链接
 
@@ -16,7 +33,7 @@
 
 ```mermaid
 flowchart LR
-  Pages[GitHub Pages 静态前端] -->|POST /api/chat| Vercel[Vercel Serverless]
+  Pages[GitHub Pages 静态前端] -->|POST /api/chat · SSE /api/chat-stream| Vercel[Vercel Serverless]
   Vercel --> RAG[knowledge/ 检索]
   Vercel --> LLM[OpenAI 兼容 API]
 ```
@@ -33,6 +50,8 @@ flowchart LR
 | [docs/UI-V1-checklist.md](./docs/UI-V1-checklist.md) | UI V1 执行清单 |
 | [docs/V2-PRD.md](./docs/V2-PRD.md) | **V2** 意图路由 · 任务状态机 · 会话恢复 · 指标 |
 | [docs/V2-checklist.md](./docs/V2-checklist.md) | V2 执行清单 |
+| [docs/V2.4-PRD.md](./docs/V2.4-PRD.md) | **V2.4** 流式 · 多轮 · 引用 · diff · eval |
+| [docs/V2.4-checklist.md](./docs/V2.4-checklist.md) | V2.4 执行清单 |
 | [docs/enterprise-capability-mapping.md](./docs/enterprise-capability-mapping.md) | 企业助手能力映射与验收 |
 | [docs/execution-checklist.md](./docs/execution-checklist.md) | 执行清单 |
 | [docs/testing.md](./docs/testing.md) | 测试与内容质量评测 |
@@ -81,7 +100,9 @@ cd demo && npm run dev
 
 ```
 content-brief-chat/
-├── api/chat.js          # Vercel 入口
+├── api/chat.js          # 主 API
+├── api/chat-stream.js   # QA 流式 SSE
+├── scripts/eval.mjs     # 自动回归
 ├── lib/                 # RAG、LLM、限流、合规
 ├── knowledge/           # 饮料场景知识库
 ├── eval/                # badcase、金标准

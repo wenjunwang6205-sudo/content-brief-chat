@@ -1,0 +1,14 @@
+{
+  "id": "QA-01",
+  "title": "品牌调性问答含引用",
+  "request": {
+    "mode": "qa",
+    "message": "澄澈饮力品牌调性是什么？",
+    "taskState": "idle"
+  },
+  "assert": {
+    "intent": "knowledge_qa",
+    "citationsMin": 1,
+    "replyContainsAny": ["澄澈", "调性", "品牌"]
+  }
+}

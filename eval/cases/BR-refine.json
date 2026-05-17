@@ -1,0 +1,15 @@
+{
+  "id": "BR-refine",
+  "title": "Brief 修订含变更说明",
+  "request": {
+    "mode": "brief",
+    "message": "把人群改成 Z 世代",
+    "taskState": "await_confirm",
+    "previousBrief": "## 1. 活动背景与目标\n618 大促。\n\n## 2. 目标人群与洞察\n运动青年。\n\n## 3. 核心信息与卖点\n青柠电解质。\n\n## 4. 渠道与内容形式建议\n抖音种草。\n\n## 5. 调性关键词与参考句式\n清爽。\n\n## 6. 合规注意事项\n避免绝对化。\n\n## 7. 待确认项\n价格待确认。"
+  },
+  "assert": {
+    "intent": "brief_refine",
+    "briefNotNull": true,
+    "briefRevisionNotNull": true
+  }
+}

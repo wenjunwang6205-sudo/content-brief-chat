@@ -1,0 +1,21 @@
+{
+  "id": "BR-02-multiturn",
+  "title": "Brief 多轮补槽后生成",
+  "steps": [
+    {
+      "mode": "brief",
+      "message": "做个抖音活动",
+      "taskState": "idle"
+    },
+    {
+      "mode": "brief",
+      "message": "618大促，主推青柠电解质，目标曝光，人群运动青年",
+      "taskState": "clarifying"
+    }
+  ],
+  "assert": {
+    "needClarification": false,
+    "briefNotNull": true,
+    "replyContains": "##"
+  }
+}

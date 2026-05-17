@@ -17,9 +17,21 @@ export type TaskState =
   | "completed";
 
 export type Citation = {
+  index?: number;
   docId: string;
   title: string;
   snippet: string;
+  fullContent?: string;
+};
+
+export type BriefRevision = {
+  summary: string;
+  changedSections: string[];
+  diffLines: Array<{
+    type: "add" | "change";
+    section: string;
+    preview: string;
+  }>;
 };
 
 export type Guardrail = {
@@ -32,6 +44,7 @@ export type ChatResponse = {
   reply: string;
   citations: Citation[];
   brief: { markdown: string } | null;
+  briefRevision?: BriefRevision | null;
   needClarification: boolean;
   clarificationQuestions: string[];
   intent?: Intent;
@@ -50,4 +63,6 @@ export type Message = {
   content: string;
   citations?: Citation[];
   briefMarkdown?: string;
+  briefRevision?: BriefRevision | null;
+  streaming?: boolean;
 };

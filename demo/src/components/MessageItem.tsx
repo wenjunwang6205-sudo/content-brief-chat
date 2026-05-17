@@ -20,18 +20,22 @@ export function MessageItem({ message, onCitationClick }: MessageItemProps) {
   }
 
   return (
-    <div className="py-3">
-      <MarkdownContent content={message.content} />
+    <div className={`py-3 ${message.streaming ? "opacity-90" : ""}`}>
+      <MarkdownContent
+        content={message.content || (message.streaming ? "▍" : "")}
+        citations={message.citations}
+        onCitationClick={onCitationClick}
+      />
       {message.citations && message.citations.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
-          {message.citations.map((c, i) => (
+          {message.citations.map((c) => (
             <button
-              key={`${c.docId}-${i}`}
+              key={`${c.docId}-${c.index ?? 0}`}
               type="button"
               onClick={() => onCitationClick(c)}
               className="text-xs text-[var(--text-secondary)] underline-offset-2 hover:text-[var(--accent)] hover:underline"
             >
-              来源 {i + 1} · {c.title}
+              [{c.index ?? "?"}] {c.title}
             </button>
           ))}
         </div>
