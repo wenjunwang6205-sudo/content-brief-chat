@@ -1,8 +1,11 @@
 import type { ChatMode, ChatResponse, TaskState } from "./types";
 
+const DEFAULT_PROD_API =
+  "https://1330417914-fcrpnf219x.ap-guangzhou.tencentscf.com";
+
 const API_BASE = (
   import.meta.env.VITE_API_BASE?.replace(/\/$/, "") ||
-  (import.meta.env.PROD ? "https://content-brief-chat.vercel.app" : "")
+  (import.meta.env.PROD ? DEFAULT_PROD_API : "")
 ).replace(/\/$/, "");
 
 function chatUrl() {
