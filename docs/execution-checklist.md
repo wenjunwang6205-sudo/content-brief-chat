@@ -144,4 +144,4 @@
 
 ---
 
-*最后更新：M1–M3 代码已完成，待 Vercel 与 Pages 变量配置*
+*最后更新：M1–M3 已完成；**UI V1**（浅色 ChatGPT 风）见 [UI-V1-PRD.md](./UI-V1-PRD.md)*

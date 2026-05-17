@@ -29,6 +29,8 @@ flowchart LR
 | 文档 | 说明 |
 |------|------|
 | [docs/PRD.md](./docs/PRD.md) | 产品需求 + **分阶段交付范围** |
+| [docs/UI-V1-PRD.md](./docs/UI-V1-PRD.md) | **UI V1** 浅色 ChatGPT 风升级 |
+| [docs/UI-V1-checklist.md](./docs/UI-V1-checklist.md) | UI V1 执行清单 |
 | [docs/execution-checklist.md](./docs/execution-checklist.md) | 执行清单 |
 | [docs/testing.md](./docs/testing.md) | 测试与内容质量评测 |
 | [docs/prompt-iteration.md](./docs/prompt-iteration.md) | Prompt 迭代记录 |
