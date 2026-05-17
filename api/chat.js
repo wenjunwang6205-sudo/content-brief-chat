@@ -1,12 +1,31 @@
 import { analyzeBriefSlots } from "../lib/brief-slots.js";
 import { scanCompliance, looksLikePriceQuestion } from "../lib/guardrail.js";
 import { chatCompletion } from "../lib/llm.js";
+import { detectIntent } from "../lib/intent.js";
 import {
   formatContextForPrompt,
   searchKnowledge,
 } from "../lib/knowledge.js";
-import { buildBriefMessages, buildQaMessages } from "../lib/prompts.js";
+import {
+  buildBriefMessages,
+  buildBriefRefineMessages,
+  buildQaMessages,
+} from "../lib/prompts.js";
 import { checkRateLimit } from "../lib/rate-limit.js";
+
+const CHITCHAT_REPLY = `我是 **ContentBrief Chat**，面向内容团队的企业级助手演示。
+
+我可以帮你：
+1. **知识问答** — 品牌调性、渠道规范、合规要求（回答带引用来源）
+2. **活动 Brief** — 根据活动信息生成结构化 Content Brief
+3. **Brief 修订** — 在已有 Brief 上按你的指令修改（如调整人群、渠道）
+4. **导出交付** — 确认后导出 Markdown
+
+直接在下方输入问题，或点击建议芯片开始。`;
+
+const HANDOFF_REPLY = `已记录你的转人工请求（演示环境）。
+
+建议在正式环境中通过 **内容中台值班** 或 **内部工单系统** 提交，并附上会话摘要。当前演示无法连接真实工单。`;
 
 function setCors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -18,6 +37,19 @@ function clientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
   if (typeof forwarded === "string") return forwarded.split(",")[0].trim();
   return req.socket?.remoteAddress ?? "unknown";
+}
+
+function basePayload(extra = {}) {
+  return {
+    needClarification: false,
+    clarificationQuestions: [],
+    needIntentConfirm: false,
+    intentOptions: [],
+    brief: null,
+    taskCompleted: false,
+    guardrail: { triggered: false, hits: [] },
+    ...extra,
+  };
 }
 
 export default async function handler(req, res) {
@@ -39,38 +71,155 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const action = body?.action;
     const mode = body?.mode === "brief" ? "brief" : "qa";
     const message = (body?.message ?? "").trim();
+    const previousBrief = (body?.previousBrief ?? "").trim();
+    const taskStateIn = body?.taskState ?? "idle";
+    const hasPreviousBrief = previousBrief.length > 100;
+
+    if (action === "complete_task") {
+      return res.status(200).json(
+        basePayload({
+          reply: "任务已标记为完成。感谢使用，如需新任务请点击「新对话」。",
+          intent: "brief_create",
+          taskState: "completed",
+          taskCompleted: true,
+          citations: [],
+        }),
+      );
+    }
+
     if (!message) {
       return res.status(400).json({ error: "message is required" });
     }
 
-    if (looksLikePriceQuestion(message)) {
-      return res.status(200).json({
-        reply:
-          "知识库中未记载具体零售价或促销折扣。请在 Brief 的「待确认项」中标注「价格与促销以官方发布为准」，或联系品牌/电商运营确认。",
-        citations: searchKnowledge("compliance 价格 促销", 2).map(
-          ({ docId, title, snippet }) => ({ docId, title, snippet }),
-        ),
-        brief: null,
-        needClarification: false,
-        clarificationQuestions: [],
-        guardrail: { triggered: true, hits: ["价格/折扣问询"] },
-      });
+    const { intent, confidence } = detectIntent({
+      message,
+      mode,
+      hasPreviousBrief,
+      taskState: taskStateIn,
+    });
+
+    if (intent === "chitchat") {
+      return res.status(200).json(
+        basePayload({
+          reply: CHITCHAT_REPLY,
+          intent,
+          taskState: taskStateIn,
+          citations: [],
+        }),
+      );
     }
 
-    if (mode === "brief") {
+    if (intent === "handoff_human") {
+      return res.status(200).json(
+        basePayload({
+          reply: HANDOFF_REPLY,
+          intent,
+          taskState: taskStateIn,
+          citations: [],
+        }),
+      );
+    }
+
+    if (intent === "policy_block" || looksLikePriceQuestion(message)) {
+      return res.status(200).json(
+        basePayload({
+          reply:
+            "知识库中未记载具体零售价或促销折扣，且不宜使用绝对化用语。请在 Brief「待确认项」标注「价格与促销以官方发布为准」，或调整表述。",
+          intent: "policy_block",
+          taskState: taskStateIn,
+          citations: searchKnowledge("compliance 价格 促销", 2).map(
+            ({ docId, title, snippet }) => ({ docId, title, snippet }),
+          ),
+          guardrail: { triggered: true, hits: ["价格/折扣或绝对化用语"] },
+        }),
+      );
+    }
+
+    if (intent === "brief_refine") {
+      const citations = searchKnowledge(message, 5);
+      const contextBlock =
+        citations.length > 0
+          ? formatContextForPrompt(citations)
+          : "（未检索到补充片段，请基于现有 Brief 谨慎修订）";
+
+      const rawReply = await chatCompletion(
+        buildBriefRefineMessages({
+          instruction: message,
+          previousBrief,
+          contextBlock,
+        }),
+      );
+      const guard = scanCompliance(rawReply);
+      let markdown = rawReply;
+      if (guard.triggered && guard.suggestion) {
+        markdown = `${rawReply}\n\n---\n**合规提示：** ${guard.suggestion}`;
+      }
+
+      return res.status(200).json(
+        basePayload({
+          reply: `已根据你的指令更新 Brief（${guard.triggered ? "含合规提示" : "请查看下方草案"}）。`,
+          intent,
+          taskState: "await_confirm",
+          citations: citations.map(({ docId, title, snippet }) => ({
+            docId,
+            title,
+            snippet,
+          })),
+          brief: { markdown },
+          guardrail: guard,
+        }),
+      );
+    }
+
+    if (intent === "brief_create") {
       const slots = analyzeBriefSlots(message);
       if (!slots.complete) {
-        return res.status(200).json({
-          reply: "生成 Brief 前还需要一些信息：",
-          citations: [],
-          brief: null,
-          needClarification: true,
-          clarificationQuestions: slots.clarificationQuestions,
-          guardrail: { triggered: false, hits: [] },
-        });
+        return res.status(200).json(
+          basePayload({
+            reply: "生成 Brief 前还需要一些信息：",
+            intent,
+            taskState: "clarifying",
+            needClarification: true,
+            clarificationQuestions: slots.clarificationQuestions,
+            citations: [],
+          }),
+        );
       }
+
+      const citations = searchKnowledge(message, 5);
+      const contextBlock =
+        citations.length > 0
+          ? formatContextForPrompt(citations)
+          : "（未检索到相关片段，请谨慎回答并提示知识库可能不完整）";
+
+      const rawReply = await chatCompletion(
+        buildBriefMessages({ request: message, contextBlock }),
+      );
+      const guard = scanCompliance(rawReply);
+      let markdown = rawReply;
+      if (guard.triggered && guard.suggestion) {
+        markdown = `${rawReply}\n\n---\n**合规提示：** ${guard.suggestion}`;
+      }
+
+      return res.status(200).json(
+        basePayload({
+          reply: guard.triggered
+            ? "已生成 Brief 草案，请查看下方内容并注意合规提示。"
+            : "已生成 Brief 草案，请确认后导出或继续提出修改。",
+          intent,
+          taskState: "await_confirm",
+          citations: citations.map(({ docId, title, snippet }) => ({
+            docId,
+            title,
+            snippet,
+          })),
+          brief: { markdown },
+          guardrail: guard,
+        }),
+      );
     }
 
     const citations = searchKnowledge(message, 5);
@@ -79,46 +228,28 @@ export default async function handler(req, res) {
         ? formatContextForPrompt(citations)
         : "（未检索到相关片段，请谨慎回答并提示知识库可能不完整）";
 
-    const messages =
-      mode === "brief"
-        ? buildBriefMessages({ request: message, contextBlock })
-        : buildQaMessages({ query: message, contextBlock });
-
-    const rawReply = await chatCompletion(messages);
+    const rawReply = await chatCompletion(
+      buildQaMessages({ query: message, contextBlock }),
+    );
     const guard = scanCompliance(rawReply);
-
     let reply = rawReply;
     if (guard.triggered && guard.suggestion) {
       reply = `${rawReply}\n\n---\n**合规提示：** ${guard.suggestion}`;
     }
 
-    const citationPayload = citations.map(({ docId, title, snippet }) => ({
-      docId,
-      title,
-      snippet,
-    }));
-
-    if (mode === "brief") {
-      return res.status(200).json({
-        reply: guard.triggered
-          ? "已生成 Brief 草案，请查看下方内容并注意合规提示。"
-          : "已生成 Brief 草案，请确认后导出。",
-        citations: citationPayload,
-        brief: { markdown: reply },
-        needClarification: false,
-        clarificationQuestions: [],
+    return res.status(200).json(
+      basePayload({
+        reply,
+        intent: "knowledge_qa",
+        taskState: "idle",
+        citations: citations.map(({ docId, title, snippet }) => ({
+          docId,
+          title,
+          snippet,
+        })),
         guardrail: guard,
-      });
-    }
-
-    return res.status(200).json({
-      reply,
-      citations: citationPayload,
-      brief: null,
-      needClarification: false,
-      clarificationQuestions: [],
-      guardrail: guard,
-    });
+      }),
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     if (msg.includes("LLM_API_KEY")) {

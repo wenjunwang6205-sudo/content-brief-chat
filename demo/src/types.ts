@@ -1,5 +1,21 @@
 export type ChatMode = "qa" | "brief";
 
+export type Intent =
+  | "knowledge_qa"
+  | "brief_create"
+  | "brief_refine"
+  | "chitchat"
+  | "policy_block"
+  | "handoff_human";
+
+export type TaskState =
+  | "idle"
+  | "clarifying"
+  | "drafting"
+  | "refining"
+  | "await_confirm"
+  | "completed";
+
 export type Citation = {
   docId: string;
   title: string;
@@ -18,6 +34,11 @@ export type ChatResponse = {
   brief: { markdown: string } | null;
   needClarification: boolean;
   clarificationQuestions: string[];
+  intent?: Intent;
+  taskState?: TaskState;
+  taskCompleted?: boolean;
+  needIntentConfirm?: boolean;
+  intentOptions?: string[];
   guardrail?: Guardrail;
   error?: string;
   hint?: string;

@@ -13,7 +13,7 @@
 |---|------|------|
 | 0.1 | V2 PRD | [x] |
 | 0.2 | V2 本清单 | [x] |
-| 0.3 | README 增加 V2 说明与 JD 映射链接 | [ ] |
+| 0.3 | README 增加 V2 说明与 JD 映射链接 | [x] |
 
 ---
 
@@ -23,20 +23,20 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 0.1 | `lib/intent.js` 规则识别（6 类 intent） | [ ] |
-| 0.2 | `api/chat.js` 返回 `intent` / `taskState` | [ ] |
-| 0.3 | `chitchat` / `handoff_human` 固定话术分支 | [ ] |
-| 0.4 | 请求体支持 `taskState` / `sessionId` / `taskId` | [ ] |
+| 0.1 | `lib/intent.js` 规则识别（6 类 intent） | [x] |
+| 0.2 | `api/chat.js` 返回 `intent` / `taskState` | [x] |
+| 0.3 | `chitchat` / `handoff_human` 固定话术分支 | [x] |
+| 0.4 | 请求体支持 `taskState` / `sessionId` / `taskId` | [x] |
 
 ### 前端
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 0.5 | `lib/analytics.ts` + 核心事件 | [ ] |
-| 0.6 | `components/TaskStatusBar.tsx`（intent + FSM） | [ ] |
-| 0.7 | BriefArtifact 增加「标记任务完成」按钮 | [ ] |
-| 0.8 | `task_started` / `task_completed` 埋点 | [ ] |
-| 0.9 | `types.ts` 扩展 ChatResponse | [ ] |
+| 0.5 | `lib/analytics.ts` + 核心事件 | [x] |
+| 0.6 | `components/TaskStatusBar.tsx`（intent + FSM） | [x] |
+| 0.7 | BriefArtifact 增加「标记任务完成」按钮 | [x] |
+| 0.8 | `task_started` / `task_completed` 埋点 | [x] |
+| 0.9 | `types.ts` 扩展 ChatResponse | [x] |
 
 ---
 
@@ -44,11 +44,11 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 1.1 | `lib/prompts.js` 增加 `buildBriefRefineMessages` | [ ] |
-| 1.2 | API：`previousBrief` + refine 分支 | [ ] |
-| 1.3 | FSM：`refining` → `await_confirm` | [ ] |
-| 1.4 | 前端：传 `pendingBrief`，展示修订说明 | [ ] |
-| 1.5 | 测试：「把人群改成 Z 世代」 | [ ] |
+| 1.1 | `lib/prompts.js` 增加 `buildBriefRefineMessages` | [x] |
+| 1.2 | API：`previousBrief` + refine 分支 | [x] |
+| 1.3 | FSM：`refining` → `await_confirm` | [x] |
+| 1.4 | 前端：传 `pendingBrief`，展示修订说明 | [x] |
+| 1.5 | 测试：「把人群改成 Z 世代」 | [ ] 需联调 LLM |
 
 ---
 
@@ -56,11 +56,11 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 2.1 | `lib/session.ts` save/load/clear | [ ] |
-| 2.2 | App 启动时 `session_resume` | [ ] |
-| 2.3 | 顶部 Banner「已恢复上次会话」 | [ ] |
-| 2.4 | 新对话清空 storage | [ ] |
-| 2.5 | 测试：刷新后消息 + Brief 仍在 | [ ] |
+| 2.1 | `lib/session.ts` save/load/clear | [x] |
+| 2.2 | App 启动时 `session_resume` | [x] |
+| 2.3 | 顶部 Banner「已恢复上次会话」 | [x] |
+| 2.4 | 新对话清空 storage | [x] |
+| 2.5 | 测试：刷新后消息 + Brief 仍在 | [ ] 手动验收 |
 
 ---
 
@@ -68,10 +68,10 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| 3.1 | 事件写入 `localStorage` 队列 | [ ] |
-| 3.2 | `?debug=1` 打开 Analytics 面板 | [ ] |
-| 3.3 | 展示任务成功率（本地计算） | [ ] |
-| 3.4 | （可选）`POST /api/event` stub | [ ] |
+| 3.1 | 事件写入 `localStorage` 队列 | [x] |
+| 3.2 | `?debug=1` 打开 Analytics 面板 | [x] |
+| 3.3 | 展示任务成功率（本地计算） | [x] |
+| 3.4 | （可选）`POST /api/event` stub | [x] |
 
 ---
 
@@ -89,9 +89,9 @@
 
 | # | 任务 | 状态 |
 |---|------|------|
-| d.1 | `npm run build` | [ ] |
-| d.2 | `vercel --prod` | [ ] |
-| d.3 | GitHub Pages workflow | [ ] |
+| d.1 | `npm run build` | [x] |
+| d.2 | `vercel --prod` | [ ] 需本地执行 |
+| d.3 | GitHub Pages workflow | [ ] push 后自动 |
 | d.4 | 走通 testing.md 补充用例（V2 节） | [ ] |
 | d.5 | 录屏 3min：恢复会话 → refine → 标记完成 | [ ] |
 

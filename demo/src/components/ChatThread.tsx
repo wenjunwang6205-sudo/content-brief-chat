@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { ChatMode, Citation, Message } from "../types";
+import type { ChatMode, Citation, Message, TaskState } from "../types";
 import { BriefArtifact } from "./BriefArtifact";
 import { EmptyState } from "./EmptyState";
 import { MessageItem } from "./MessageItem";
@@ -9,9 +9,11 @@ type ChatThreadProps = {
   loading: boolean;
   mode: ChatMode;
   pendingBrief: string | null;
+  taskState: TaskState;
   onPickSuggestion: (message: string, mode: ChatMode) => void;
   onCitationClick: (citation: Citation) => void;
   onExportBrief: () => void;
+  onCompleteTask: () => void;
 };
 
 export function ChatThread({
@@ -19,9 +21,11 @@ export function ChatThread({
   loading,
   mode,
   pendingBrief,
+  taskState,
   onPickSuggestion,
   onCitationClick,
   onExportBrief,
+  onCompleteTask,
 }: ChatThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +55,12 @@ export function ChatThread({
               </div>
             ) : null}
             {pendingBrief ? (
-              <BriefArtifact markdown={pendingBrief} onExport={onExportBrief} />
+              <BriefArtifact
+                markdown={pendingBrief}
+                taskState={taskState}
+                onExport={onExportBrief}
+                onComplete={onCompleteTask}
+              />
             ) : null}
           </>
         )}

@@ -1,6 +1,6 @@
 # ContentBrief Chat
 
-面向快消**饮料**行业内容团队的企业级对话助手演示：**知识问答** + **活动 Content Brief 任务闭环**（引用溯源、追问补全、人工确认导出）。
+面向快消**饮料**行业内容团队的企业级对话助手演示：**知识问答** + **活动 Content Brief 任务闭环**（引用溯源、追问补全、人工确认导出）。**V2** 已支持意图路由、任务状态机、跨轮 Brief 修订、会话恢复与本地指标面板（`?debug=1`）。
 
 虚构品牌：**澄澈饮力**。文档与代码中不包含任何真实企业名称。
 
@@ -33,7 +33,7 @@ flowchart LR
 | [docs/UI-V1-checklist.md](./docs/UI-V1-checklist.md) | UI V1 执行清单 |
 | [docs/V2-PRD.md](./docs/V2-PRD.md) | **V2** 意图路由 · 任务状态机 · 会话恢复 · 指标 |
 | [docs/V2-checklist.md](./docs/V2-checklist.md) | V2 执行清单 |
-| [docs/NIO-capability-mapping.md](./docs/NIO-capability-mapping.md) | 企业助手能力映射（面试/内推） |
+| [docs/enterprise-capability-mapping.md](./docs/enterprise-capability-mapping.md) | 企业助手能力映射（面试/内推） |
 | [docs/execution-checklist.md](./docs/execution-checklist.md) | 执行清单 |
 | [docs/testing.md](./docs/testing.md) | 测试与内容质量评测 |
 | [docs/prompt-iteration.md](./docs/prompt-iteration.md) | Prompt 迭代记录 |
