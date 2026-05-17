@@ -1,7 +1,10 @@
 import type { ChatMode, ChatResponse } from "./types";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE?.replace(/\/$/, "") ?? "";
+// 生产构建默认走 Vercel API；可用 VITE_API_BASE 覆盖。本地 dev 留空走 vite proxy。
+const API_BASE = (
+  import.meta.env.VITE_API_BASE?.replace(/\/$/, "") ||
+  (import.meta.env.PROD ? "https://content-brief-chat.vercel.app" : "")
+).replace(/\/$/, "");
 
 export async function sendChat(params: {
   mode: ChatMode;
