@@ -33,7 +33,7 @@ flowchart LR
 | [docs/UI-V1-checklist.md](./docs/UI-V1-checklist.md) | UI V1 执行清单 |
 | [docs/V2-PRD.md](./docs/V2-PRD.md) | **V2** 意图路由 · 任务状态机 · 会话恢复 · 指标 |
 | [docs/V2-checklist.md](./docs/V2-checklist.md) | V2 执行清单 |
-| [docs/enterprise-capability-mapping.md](./docs/enterprise-capability-mapping.md) | 企业助手能力映射（面试/内推） |
+| [docs/enterprise-capability-mapping.md](./docs/enterprise-capability-mapping.md) | 企业助手能力映射与验收 |
 | [docs/execution-checklist.md](./docs/execution-checklist.md) | 执行清单 |
 | [docs/testing.md](./docs/testing.md) | 测试与内容质量评测 |
 | [docs/prompt-iteration.md](./docs/prompt-iteration.md) | Prompt 迭代记录 |
