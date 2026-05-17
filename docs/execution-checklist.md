@@ -25,7 +25,7 @@
 | 1.1 | 创建 GitHub 仓库 `content-brief-chat` 并推送 | — | [x] |
 | 1.2 | README：项目说明、文档索引、架构示意 | — | [x] |
 | 1.3 | 三份核心文档：PRD / 本清单 / testing | — | [x] |
-| 1.4 | 在作品集站点增加本项目卡片与链接 | — | [~] |
+| 1.4 | 在作品集站点增加本项目卡片与链接 | portfolio page.tsx | [x] |
 | 1.5 | LICENSE（MIT） | — | [x] |
 
 ---
