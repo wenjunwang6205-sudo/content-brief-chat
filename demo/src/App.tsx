@@ -9,6 +9,7 @@ import { Header } from "./components/Header";
 import { ResumeBanner } from "./components/ResumeBanner";
 import { TaskStatusBar } from "./components/TaskStatusBar";
 import { isDebugMode, track } from "./lib/analytics";
+import { apiModeHint, shouldUseStream } from "./lib/clientRouting";
 import {
   clearSession,
   createSessionIds,
@@ -17,7 +18,6 @@ import {
 } from "./lib/session";
 import type {
   BriefRevision,
-  ChatMode,
   ChatResponse,
   Citation,
   Intent,
@@ -30,7 +30,6 @@ function uid() {
 }
 
 export default function App() {
-  const [mode, setMode] = useState<ChatMode>("qa");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +56,6 @@ export default function App() {
   useEffect(() => {
     const saved = loadSession();
     if (saved && saved.messages.length > 0) {
-      setMode(saved.mode);
       setMessages(saved.messages);
       setPendingBrief(saved.pendingBrief);
       setBriefRevision(saved.briefRevision ?? null);
@@ -78,14 +76,14 @@ export default function App() {
     saveSession({
       sessionId,
       taskId,
-      mode,
+      mode: "qa",
       messages: messages.filter((m) => !m.streaming),
       pendingBrief,
       briefRevision,
       taskState,
       savedAt: new Date().toISOString(),
     });
-  }, [sessionId, taskId, mode, messages, pendingBrief, briefRevision, taskState]);
+  }, [sessionId, taskId, messages, pendingBrief, briefRevision, taskState]);
 
   const resetSession = useCallback(() => {
     const ids = createSessionIds();
@@ -105,15 +103,6 @@ export default function App() {
     track("session_new", { sessionId: ids.sessionId });
   }, []);
 
-  const handleNewChat = () => {
-    resetSession();
-  };
-
-  const handleModeChange = (next: ChatMode) => {
-    setMode(next);
-    handleNewChat();
-  };
-
   const maybeStartTask = (intent?: Intent) => {
     if (
       taskStartedRef.current ||
@@ -128,37 +117,38 @@ export default function App() {
 
   const applyResponse = useCallback(
     (res: ChatResponse) => {
-    if (res.intent) setLastIntent(res.intent);
-    if (res.taskState) setTaskState(res.taskState);
-    maybeStartTask(res.intent);
+      if (res.intent) setLastIntent(res.intent);
+      if (res.taskState) setTaskState(res.taskState);
+      maybeStartTask(res.intent);
 
-    const assistantContent = res.needClarification
-      ? `${res.reply}\n\n${res.clarificationQuestions.map((q) => `• ${q}`).join("\n")}`
-      : res.reply;
+      const assistantContent = res.needClarification
+        ? `${res.reply}\n\n${res.clarificationQuestions.map((q) => `• ${q}`).join("\n")}`
+        : res.reply;
 
-    const assistantMsg: Message = {
-      id: uid(),
-      role: "assistant",
-      content: assistantContent,
-      citations: res.citations,
-      briefMarkdown: res.brief?.markdown,
-      briefRevision: res.briefRevision ?? null,
-    };
-
-    setMessages((prev) => [...prev, assistantMsg]);
-    if (res.brief?.markdown) {
-      setPendingBrief(res.brief.markdown);
-      setBriefRevision(res.briefRevision ?? null);
-    }
-    if (res.taskCompleted) {
-      track("task_completed", { taskId, sessionId });
-    }
-  },
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uid(),
+          role: "assistant",
+          content: assistantContent,
+          citations: res.citations,
+          briefMarkdown: res.brief?.markdown,
+          briefRevision: res.briefRevision ?? null,
+        },
+      ]);
+      if (res.brief?.markdown) {
+        setPendingBrief(res.brief.markdown);
+        setBriefRevision(res.briefRevision ?? null);
+      }
+      if (res.taskCompleted) {
+        track("task_completed", { taskId, sessionId });
+      }
+    },
     [sessionId, taskId],
   );
 
   const runSend = useCallback(
-    async (text: string, sendMode: ChatMode = mode) => {
+    async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
 
@@ -169,12 +159,13 @@ export default function App() {
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
 
-      if (sendMode === "brief" && taskState === "idle") {
+      const modeHint = apiModeHint(trimmed, pendingBrief);
+      if (modeHint === "brief" && taskState === "idle") {
         setTaskState("clarifying");
       }
 
       const params = {
-        mode: sendMode,
+        mode: modeHint,
         message: trimmed,
         history: nextHistory,
         sessionId,
@@ -183,7 +174,11 @@ export default function App() {
         previousBrief: pendingBrief,
       };
 
-      const useStream = sendMode === "qa";
+      const useStream = shouldUseStream({
+        message: trimmed,
+        pendingBrief,
+        taskState,
+      });
 
       try {
         if (useStream) {
@@ -234,8 +229,13 @@ export default function App() {
               );
               if (res.intent) setLastIntent(res.intent);
               if (res.taskState) setTaskState(res.taskState);
+              maybeStartTask(res.intent);
+              if (res.brief?.markdown) {
+                setPendingBrief(res.brief.markdown);
+                setBriefRevision(res.briefRevision ?? null);
+              }
             },
-            onError: async (err) => {
+            onError: (err) => {
               setMessages((prev) => prev.filter((m) => m.id !== streamId));
               setError(err.message);
             },
@@ -254,7 +254,6 @@ export default function App() {
       applyResponse,
       history,
       loading,
-      mode,
       pendingBrief,
       sessionId,
       taskId,
@@ -297,7 +296,7 @@ export default function App() {
 
   return (
     <div className="flex h-[100dvh] flex-col bg-[var(--bg-page)]">
-      <Header mode={mode} onModeChange={handleModeChange} onNewChat={handleNewChat} />
+      <Header onNewChat={resetSession} />
       <DemoBanner />
 
       {showResumeBanner ? (
@@ -309,14 +308,10 @@ export default function App() {
       <ChatThread
         messages={messages}
         loading={loading}
-        mode={mode}
         pendingBrief={pendingBrief}
         briefRevision={briefRevision}
         taskState={taskState}
-        onPickSuggestion={(msg, m) => {
-          setMode(m);
-          void runSend(msg, m);
-        }}
+        onPickSuggestion={(msg) => void runSend(msg)}
         onCitationClick={setActiveCitation}
         onExportBrief={exportBrief}
         onCompleteTask={() => void handleCompleteTask()}
@@ -327,7 +322,6 @@ export default function App() {
         onChange={setInput}
         onSend={() => void runSend(input)}
         loading={loading}
-        mode={mode}
         error={error}
       />
 

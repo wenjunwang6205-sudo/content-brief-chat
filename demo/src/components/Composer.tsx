@@ -5,7 +5,6 @@ type ComposerProps = {
   onChange: (value: string) => void;
   onSend: () => void;
   loading: boolean;
-  mode: "qa" | "brief";
   error: string | null;
 };
 
@@ -14,7 +13,6 @@ export function Composer({
   onChange,
   onSend,
   loading,
-  mode,
   error,
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,9 +49,7 @@ export function Composer({
               resize();
             }}
             onKeyDown={handleKeyDown}
-            placeholder={
-              mode === "qa" ? "询问品牌、渠道或合规问题…" : "描述活动 Brief 需求…"
-            }
+            placeholder="问品牌/渠道/合规，或描述活动 Brief 需求…"
             rows={1}
             disabled={loading}
             className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-4 py-3.5 text-[15px] leading-relaxed text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] disabled:opacity-60"

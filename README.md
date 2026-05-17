@@ -26,7 +26,11 @@ npm run eval
 | 资源 | 地址 |
 |------|------|
 | 在线 Demo | https://wenjunwang6205-sudo.github.io/content-brief-chat/ |
-| 文档 PRD | [docs/PRD.md](./docs/PRD.md) |
+| **文档导航（先看）** | [docs/00-文档导航.md](./docs/00-文档导航.md) |
+| 需求分析 | [docs/01-需求分析-内容团队提效系统.md](./docs/01-需求分析-内容团队提效系统.md) |
+| 产品大图 | [docs/02-产品大图-内容团队提效系统.md](./docs/02-产品大图-内容团队提效系统.md) |
+| 需求→PRD 过程 | [docs/03-从需求到PRD-设计过程.md](./docs/03-从需求到PRD-设计过程.md) |
+| 切口 PRD | [docs/PRD.md](./docs/PRD.md) |
 | 演示脚本 | [docs/demo-scripts.md](./docs/demo-scripts.md) |
 
 ## 架构
@@ -53,6 +57,7 @@ flowchart LR
 | [docs/V2.4-PRD.md](./docs/V2.4-PRD.md) | **V2.4** 流式 · 多轮 · 引用 · diff · eval |
 | [docs/V2.4-checklist.md](./docs/V2.4-checklist.md) | V2.4 执行清单 |
 | [docs/enterprise-capability-mapping.md](./docs/enterprise-capability-mapping.md) | 企业助手能力映射与验收 |
+| [docs/考题理解与产品选题说明.md](./docs/考题理解与产品选题说明.md) | **考题理解** · 大图 · 切口 · 为何当前形态 |
 | [docs/execution-checklist.md](./docs/execution-checklist.md) | 执行清单 |
 | [docs/testing.md](./docs/testing.md) | 测试与内容质量评测 |
 | [docs/prompt-iteration.md](./docs/prompt-iteration.md) | Prompt 迭代记录 |

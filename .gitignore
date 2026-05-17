@@ -17,4 +17,3 @@ demo/tsconfig.tsbuildinfo
 *.log
 .idea/
 .vscode/
-.vercel

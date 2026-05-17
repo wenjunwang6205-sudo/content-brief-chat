@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { BriefRevision, ChatMode, Citation, Message, TaskState } from "../types";
+import type { BriefRevision, Citation, Message, TaskState } from "../types";
 import { BriefArtifact } from "./BriefArtifact";
 import { EmptyState } from "./EmptyState";
 import { MessageItem } from "./MessageItem";
@@ -7,11 +7,10 @@ import { MessageItem } from "./MessageItem";
 type ChatThreadProps = {
   messages: Message[];
   loading: boolean;
-  mode: ChatMode;
   pendingBrief: string | null;
   briefRevision?: BriefRevision | null;
   taskState: TaskState;
-  onPickSuggestion: (message: string, mode: ChatMode) => void;
+  onPickSuggestion: (message: string) => void;
   onCitationClick: (citation: Citation) => void;
   onExportBrief: () => void;
   onCompleteTask: () => void;
@@ -20,7 +19,6 @@ type ChatThreadProps = {
 export function ChatThread({
   messages,
   loading,
-  mode,
   pendingBrief,
   briefRevision,
   taskState,
@@ -39,7 +37,7 @@ export function ChatThread({
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-3xl px-4 pb-6 pt-4">
         {messages.length === 0 && !loading ? (
-          <EmptyState mode={mode} onPick={onPickSuggestion} />
+          <EmptyState onPick={onPickSuggestion} />
         ) : (
           <>
             {messages.map((m) => (
