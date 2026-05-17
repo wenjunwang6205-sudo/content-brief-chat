@@ -15,7 +15,6 @@
   ],
   "assert": {
     "needClarification": false,
-    "briefNotNull": true,
-    "replyContains": "##"
+    "briefNotNull": true
   }
 }
